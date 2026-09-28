@@ -1,0 +1,14 @@
+{
+  "functions": {
+    "api/index.php": {
+      "runtime": "vercel-php@0.9.0",
+      "includeFiles": "{*.php,admin/**,config/**,includes/**}"
+    }
+  },
+  "rewrites": [
+    { "source": "/", "destination": "/api/index.php?__path=index.php" },
+    { "source": "/admin", "destination": "/api/index.php?__path=admin/login.php" },
+    { "source": "/admin/", "destination": "/api/index.php?__path=admin/login.php" },
+    { "source": "/:file(.*\\.php)", "destination": "/api/index.php?__path=:file" }
+  ]
+}
