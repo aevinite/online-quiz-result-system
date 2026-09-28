@@ -5,10 +5,10 @@
       "includeFiles": "{*.php,admin/**,config/**,includes/**}"
     }
   },
-  "rewrites": [
-    { "source": "/", "destination": "/api/index.php?__path=index.php" },
-    { "source": "/admin", "destination": "/api/index.php?__path=admin/login.php" },
-    { "source": "/admin/", "destination": "/api/index.php?__path=admin/login.php" },
-    { "source": "/:file(.*\\.php)", "destination": "/api/index.php?__path=:file" }
+  "routes": [
+    { "src": "/", "dest": "/api/index.php?__path=index.php" },
+    { "src": "/admin/?", "dest": "/api/index.php?__path=admin/login.php" },
+    { "src": "/(.*\\.php)", "dest": "/api/index.php?__path=$1" },
+    { "src": "/(config|includes|api)/.*", "status": 404, "dest": "/404" }
   ]
 }

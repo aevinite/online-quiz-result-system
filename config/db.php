@@ -20,8 +20,10 @@ if ($DB_SSL) {
     $flags = MYSQLI_CLIENT_SSL | MYSQLI_CLIENT_SSL_DONT_VERIFY_SERVER_CERT;
 }
 
-if (!@mysqli_real_connect($conn, $DB_HOST, $DB_USER, $DB_PASS, $DB_NAME, $DB_PORT, null, $flags)) {
-    die('Database connection failed: ' . mysqli_connect_error());
+try {
+    mysqli_real_connect($conn, $DB_HOST, $DB_USER, $DB_PASS, $DB_NAME, $DB_PORT, null, $flags);
+} catch (mysqli_sql_exception $e) {
+    die('Database connection failed: ' . htmlspecialchars($e->getMessage()));
 }
 
 mysqli_set_charset($conn, 'utf8mb4');
