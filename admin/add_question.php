@@ -20,14 +20,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = 'Correct option must be A, B, C or D.';
 
     if (!$errors) {
-        $stmt = mysqli_prepare(
-            $conn,
+        $stmt = $conn->prepare(
             'INSERT INTO questions (question, option_a, option_b, option_c, option_d, correct_option)
              VALUES (?, ?, ?, ?, ?, ?)'
         );
-        mysqli_stmt_bind_param($stmt, 'ssssss',
-            $q['question'], $q['option_a'], $q['option_b'], $q['option_c'], $q['option_d'], $q['correct_option']);
-        if (mysqli_stmt_execute($stmt)) {
+        if ($stmt->execute([
+            $q['question'], $q['option_a'], $q['option_b'], $q['option_c'], $q['option_d'], $q['correct_option'],
+        ])) {
             header('Location: dashboard.php?msg=added');
             exit;
         }

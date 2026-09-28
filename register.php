@@ -19,23 +19,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Check duplicate email
     if (!$errors) {
-        $stmt = mysqli_prepare($conn, 'SELECT id FROM users WHERE email = ?');
-        mysqli_stmt_bind_param($stmt, 's', $email);
-        mysqli_stmt_execute($stmt);
-        mysqli_stmt_store_result($stmt);
-        if (mysqli_stmt_num_rows($stmt) > 0) {
+        $stmt = $conn->prepare('SELECT id FROM users WHERE email = ?');
+        $stmt->execute([$email]);
+        if ($stmt->fetch()) {
             $errors[] = 'That email is already registered. Please login.';
         }
-        mysqli_stmt_close($stmt);
     }
 
     // ---- Insert user ----
     if (!$errors) {
         $hash = password_hash($password, PASSWORD_DEFAULT);
-        $stmt = mysqli_prepare($conn, 'INSERT INTO users (name, email, password) VALUES (?, ?, ?)');
-        mysqli_stmt_bind_param($stmt, 'sss', $name, $email, $hash);
-        if (mysqli_stmt_execute($stmt)) {
-            $_SESSION['user_id']   = mysqli_insert_id($conn);
+        $stmt = $conn->prepare('INSERT INTO users (name, email, password) VALUES (?, ?, ?) RETURNING id');
+        if ($stmt->execute([$name, $email, $hash])) {
+            $_SESSION['user_id']   = $stmt->fetchColumn();
             $_SESSION['user_name'] = $name;
             header('Location: quiz.php');
             exit;

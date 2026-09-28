@@ -9,11 +9,7 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 // Load all questions (correct answers are NOT sent to the browser).
-$result = mysqli_query($conn, 'SELECT id, question, option_a, option_b, option_c, option_d FROM questions ORDER BY id');
-$questions = [];
-while ($row = mysqli_fetch_assoc($result)) {
-    $questions[] = $row;
-}
+$questions = $conn->query('SELECT id, question, option_a, option_b, option_c, option_d FROM questions ORDER BY id')->fetchAll();
 $total = count($questions);
 
 $page_title = 'Quiz | Online Quiz System';

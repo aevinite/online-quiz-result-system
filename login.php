@@ -12,21 +12,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($email === '' || $password === '') {
         $errors[] = 'Please enter both email and password.';
     } else {
-        $stmt = mysqli_prepare($conn, 'SELECT id, name, password FROM users WHERE email = ?');
-        mysqli_stmt_bind_param($stmt, 's', $email);
-        mysqli_stmt_execute($stmt);
-        mysqli_stmt_bind_result($stmt, $id, $name, $hash);
+        $stmt = $conn->prepare('SELECT id, name, password FROM users WHERE email = ?');
+        $stmt->execute([$email]);
+        $user = $stmt->fetch();
 
-        if (mysqli_stmt_fetch($stmt) && password_verify($password, $hash)) {
-            mysqli_stmt_close($stmt);
-            $_SESSION['user_id']   = $id;
-            $_SESSION['user_name'] = $name;
+        if ($user && password_verify($password, $user['password'])) {
+            $_SESSION['user_id']   = $user['id'];
+            $_SESSION['user_name'] = $user['name'];
             header('Location: quiz.php');
             exit;
         } else {
             $errors[] = 'Invalid email or password.';
         }
-        mysqli_stmt_close($stmt);
     }
 }
 

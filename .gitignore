@@ -6,3 +6,4 @@
 Thumbs.db
 .vercel
 .env*
+config/db.local.php

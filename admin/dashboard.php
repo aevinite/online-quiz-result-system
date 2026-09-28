@@ -3,11 +3,11 @@ require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/../config/db.php';
 
 // Counts for the summary cards.
-$q_count = mysqli_fetch_row(mysqli_query($conn, 'SELECT COUNT(*) FROM questions'))[0];
-$u_count = mysqli_fetch_row(mysqli_query($conn, 'SELECT COUNT(*) FROM users'))[0];
-$r_count = mysqli_fetch_row(mysqli_query($conn, 'SELECT COUNT(*) FROM results'))[0];
+$q_count = $conn->query('SELECT COUNT(*) FROM questions')->fetchColumn();
+$u_count = $conn->query('SELECT COUNT(*) FROM users')->fetchColumn();
+$r_count = $conn->query('SELECT COUNT(*) FROM results')->fetchColumn();
 
-$questions = mysqli_query($conn, 'SELECT * FROM questions ORDER BY id DESC');
+$questions = $conn->query('SELECT * FROM questions ORDER BY id DESC')->fetchAll();
 
 $flash = $_GET['msg'] ?? '';
 
@@ -35,7 +35,7 @@ require_once __DIR__ . '/admin_header.php';
     <div class="alert alert-success">Question deleted successfully.</div>
   <?php endif; ?>
 
-  <?php if (mysqli_num_rows($questions) === 0): ?>
+  <?php if (count($questions) === 0): ?>
     <div class="alert alert-info">No questions yet. Click <strong>Add Question</strong> to create one.</div>
   <?php else: ?>
     <div class="table-wrap">
@@ -44,7 +44,7 @@ require_once __DIR__ . '/admin_header.php';
           <tr><th>#</th><th>Question</th><th>Correct</th><th>Actions</th></tr>
         </thead>
         <tbody>
-          <?php while ($q = mysqli_fetch_assoc($questions)): ?>
+          <?php foreach ($questions as $q): ?>
             <tr>
               <td><?php echo $q['id']; ?></td>
               <td><?php echo htmlspecialchars($q['question']); ?></td>
@@ -56,7 +56,7 @@ require_once __DIR__ . '/admin_header.php';
                    onclick="return confirm('Delete this question?')">Delete</a>
               </td>
             </tr>
-          <?php endwhile; ?>
+          <?php endforeach; ?>
         </tbody>
       </table>
     </div>

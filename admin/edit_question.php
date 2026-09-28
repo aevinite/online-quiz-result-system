@@ -25,15 +25,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $errors = array_unique($errors);
 
     if (!$errors) {
-        $stmt = mysqli_prepare(
-            $conn,
+        $stmt = $conn->prepare(
             'UPDATE questions
                 SET question = ?, option_a = ?, option_b = ?, option_c = ?, option_d = ?, correct_option = ?
               WHERE id = ?'
         );
-        mysqli_stmt_bind_param($stmt, 'ssssssi',
-            $q['question'], $q['option_a'], $q['option_b'], $q['option_c'], $q['option_d'], $q['correct_option'], $id);
-        if (mysqli_stmt_execute($stmt)) {
+        if ($stmt->execute([
+            $q['question'], $q['option_a'], $q['option_b'], $q['option_c'], $q['option_d'], $q['correct_option'], $id,
+        ])) {
             header('Location: dashboard.php?msg=updated');
             exit;
         }
@@ -41,12 +40,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 } else {
     // Load existing question.
-    $stmt = mysqli_prepare($conn, 'SELECT question, option_a, option_b, option_c, option_d, correct_option FROM questions WHERE id = ?');
-    mysqli_stmt_bind_param($stmt, 'i', $id);
-    mysqli_stmt_execute($stmt);
-    $res = mysqli_stmt_get_result($stmt);
-    $q = mysqli_fetch_assoc($res);
-    mysqli_stmt_close($stmt);
+    $stmt = $conn->prepare('SELECT question, option_a, option_b, option_c, option_d, correct_option FROM questions WHERE id = ?');
+    $stmt->execute([$id]);
+    $q = $stmt->fetch();
     if (!$q) { header('Location: dashboard.php'); exit; }
 }
 

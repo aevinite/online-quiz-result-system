@@ -1,6 +1,6 @@
 <?php
 /**
- * Stores PHP sessions in MySQL (table `sessions`).
+ * Stores PHP sessions in the database (table `sessions`).
  * Needed on Vercel, where each request may run on a different server
  * and file-based sessions would be lost between pages.
  */
@@ -27,40 +27,33 @@ class DbSessionHandler implements SessionHandlerInterface
 
     public function read($id): string
     {
-        $stmt = mysqli_prepare($this->conn, 'SELECT data FROM sessions WHERE id = ?');
-        mysqli_stmt_bind_param($stmt, 's', $id);
-        mysqli_stmt_execute($stmt);
-        $row = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
-        return $row ? $row['data'] : '';
+        $stmt = $this->conn->prepare('SELECT data FROM sessions WHERE id = ?');
+        $stmt->execute([$id]);
+        $data = $stmt->fetchColumn();
+        return $data !== false ? $data : '';
     }
 
     public function write($id, $data): bool
     {
-        $now  = time();
-        $stmt = mysqli_prepare(
-            $this->conn,
+        $stmt = $this->conn->prepare(
             'INSERT INTO sessions (id, data, updated_at) VALUES (?, ?, ?)
-             ON DUPLICATE KEY UPDATE data = VALUES(data), updated_at = VALUES(updated_at)'
+             ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data, updated_at = EXCLUDED.updated_at'
         );
-        mysqli_stmt_bind_param($stmt, 'ssi', $id, $data, $now);
-        return mysqli_stmt_execute($stmt);
+        return $stmt->execute([$id, $data, time()]);
     }
 
     public function destroy($id): bool
     {
-        $stmt = mysqli_prepare($this->conn, 'DELETE FROM sessions WHERE id = ?');
-        mysqli_stmt_bind_param($stmt, 's', $id);
-        return mysqli_stmt_execute($stmt);
+        $stmt = $this->conn->prepare('DELETE FROM sessions WHERE id = ?');
+        return $stmt->execute([$id]);
     }
 
     #[\ReturnTypeWillChange]
     public function gc($max_lifetime)
     {
-        $cutoff = time() - $max_lifetime;
-        $stmt   = mysqli_prepare($this->conn, 'DELETE FROM sessions WHERE updated_at < ?');
-        mysqli_stmt_bind_param($stmt, 'i', $cutoff);
-        mysqli_stmt_execute($stmt);
-        return mysqli_stmt_affected_rows($stmt);
+        $stmt = $this->conn->prepare('DELETE FROM sessions WHERE updated_at < ?');
+        $stmt->execute([time() - $max_lifetime]);
+        return $stmt->rowCount();
     }
 }
 

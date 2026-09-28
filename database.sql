@@ -1,31 +1,25 @@
 -- =========================================================
 --  Online Quiz & Result Management System
---  MySQL Database Schema
---  Run this file once in phpMyAdmin (Import) or MySQL CLI.
+--  PostgreSQL Database Schema (Supabase)
+--  Run this file once in the Supabase SQL Editor.
 -- =========================================================
-
-CREATE DATABASE IF NOT EXISTS quiz_system
-  DEFAULT CHARACTER SET utf8mb4
-  COLLATE utf8mb4_unicode_ci;
-
-USE quiz_system;
 
 -- ---------------------------------------------------------
 --  Table: users  (students who register and take the quiz)
 -- ---------------------------------------------------------
 CREATE TABLE IF NOT EXISTS users (
-  id          INT AUTO_INCREMENT PRIMARY KEY,
+  id          SERIAL PRIMARY KEY,
   name        VARCHAR(100)  NOT NULL,
   email       VARCHAR(150)  NOT NULL UNIQUE,
   password    VARCHAR(255)  NOT NULL,          -- stored hashed (password_hash)
   created_at  TIMESTAMP     DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB;
+);
 
 -- ---------------------------------------------------------
 --  Table: questions  (managed by admin)
 -- ---------------------------------------------------------
 CREATE TABLE IF NOT EXISTS questions (
-  id            INT AUTO_INCREMENT PRIMARY KEY,
+  id            SERIAL PRIMARY KEY,
   question      TEXT          NOT NULL,
   option_a      VARCHAR(255)  NOT NULL,
   option_b      VARCHAR(255)  NOT NULL,
@@ -33,20 +27,19 @@ CREATE TABLE IF NOT EXISTS questions (
   option_d      VARCHAR(255)  NOT NULL,
   correct_option CHAR(1)      NOT NULL,         -- one of: A, B, C, D
   created_at    TIMESTAMP     DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB;
+);
 
 -- ---------------------------------------------------------
 --  Table: results  (one row per attempt)
 -- ---------------------------------------------------------
 CREATE TABLE IF NOT EXISTS results (
-  id             INT AUTO_INCREMENT PRIMARY KEY,
-  user_id        INT           NOT NULL,
+  id             SERIAL PRIMARY KEY,
+  user_id        INT           NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   score          INT           NOT NULL,
   total_questions INT          NOT NULL,
   percentage     DECIMAL(5,2)  NOT NULL,
-  taken_at       TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-) ENGINE=InnoDB;
+  taken_at       TIMESTAMP     DEFAULT CURRENT_TIMESTAMP
+);
 
 -- ---------------------------------------------------------
 --  Table: admins
@@ -55,19 +48,27 @@ CREATE TABLE IF NOT EXISTS results (
 --  (so the password hash is generated correctly by PHP).
 -- ---------------------------------------------------------
 CREATE TABLE IF NOT EXISTS admins (
-  id        INT AUTO_INCREMENT PRIMARY KEY,
+  id        SERIAL PRIMARY KEY,
   username  VARCHAR(50)  NOT NULL UNIQUE,
   password  VARCHAR(255) NOT NULL
-) ENGINE=InnoDB;
+);
 
 -- ---------------------------------------------------------
 --  Table: sessions  (login sessions, used when hosted on Vercel)
 -- ---------------------------------------------------------
 CREATE TABLE IF NOT EXISTS sessions (
   id          VARCHAR(128) NOT NULL PRIMARY KEY,
-  data        MEDIUMTEXT   NOT NULL,
+  data        TEXT         NOT NULL,
   updated_at  INT          NOT NULL
-) ENGINE=InnoDB;
+);
+
+-- The app connects directly as the database owner; lock these tables
+-- away from Supabase's public REST API.
+ALTER TABLE users     ENABLE ROW LEVEL SECURITY;
+ALTER TABLE questions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE results   ENABLE ROW LEVEL SECURITY;
+ALTER TABLE admins    ENABLE ROW LEVEL SECURITY;
+ALTER TABLE sessions  ENABLE ROW LEVEL SECURITY;
 
 -- ---------------------------------------------------------
 --  Sample questions so the quiz works right away

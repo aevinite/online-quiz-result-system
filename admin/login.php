@@ -12,21 +12,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = trim($_POST['username'] ?? '');
     $password = $_POST['password'] ?? '';
 
-    $stmt = mysqli_prepare($conn, 'SELECT id, password FROM admins WHERE username = ?');
-    mysqli_stmt_bind_param($stmt, 's', $username);
-    mysqli_stmt_execute($stmt);
-    mysqli_stmt_bind_result($stmt, $id, $hash);
+    $stmt = $conn->prepare('SELECT id, password FROM admins WHERE username = ?');
+    $stmt->execute([$username]);
+    $admin = $stmt->fetch();
 
-    if (mysqli_stmt_fetch($stmt) && password_verify($password, $hash)) {
-        mysqli_stmt_close($stmt);
-        $_SESSION['admin_id']       = $id;
+    if ($admin && password_verify($password, $admin['password'])) {
+        $_SESSION['admin_id']       = $admin['id'];
         $_SESSION['admin_username'] = $username;
         header('Location: dashboard.php');
         exit;
     } else {
         $error = 'Invalid admin credentials.';
     }
-    mysqli_stmt_close($stmt);
 }
 ?>
 <!DOCTYPE html>

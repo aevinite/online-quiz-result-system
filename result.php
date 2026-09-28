@@ -12,27 +12,21 @@ $user_id = $_SESSION['user_id'];
 $single = null;
 if (isset($_GET['id'])) {
     $rid  = (int) $_GET['id'];
-    $stmt = mysqli_prepare(
-        $conn,
+    $stmt = $conn->prepare(
         'SELECT score, total_questions, percentage, taken_at
            FROM results WHERE id = ? AND user_id = ?'
     );
-    mysqli_stmt_bind_param($stmt, 'ii', $rid, $user_id);
-    mysqli_stmt_execute($stmt);
-    $res = mysqli_stmt_get_result($stmt);
-    $single = mysqli_fetch_assoc($res);
-    mysqli_stmt_close($stmt);
+    $stmt->execute([$rid, $user_id]);
+    $single = $stmt->fetch();
 }
 
 // Full history for this student.
-$stmt = mysqli_prepare(
-    $conn,
+$stmt = $conn->prepare(
     'SELECT score, total_questions, percentage, taken_at
        FROM results WHERE user_id = ? ORDER BY taken_at DESC'
 );
-mysqli_stmt_bind_param($stmt, 'i', $user_id);
-mysqli_stmt_execute($stmt);
-$history = mysqli_stmt_get_result($stmt);
+$stmt->execute([$user_id]);
+$history = $stmt->fetchAll();
 
 $page_title = 'Result | Online Quiz System';
 require_once __DIR__ . '/includes/header.php';
@@ -74,7 +68,7 @@ require_once __DIR__ . '/includes/header.php';
 
 <div class="card">
   <h2>My Quiz History</h2>
-  <?php if (mysqli_num_rows($history) === 0): ?>
+  <?php if (count($history) === 0): ?>
     <div class="alert alert-info">You haven't taken any quiz yet. <a href="quiz.php">Start now!</a></div>
   <?php else: ?>
     <div class="table-wrap">
@@ -83,7 +77,7 @@ require_once __DIR__ . '/includes/header.php';
           <tr><th>#</th><th>Score</th><th>Total</th><th>Percentage</th><th>Result</th><th>Date</th></tr>
         </thead>
         <tbody>
-          <?php $n = 1; while ($r = mysqli_fetch_assoc($history)): ?>
+          <?php $n = 1; foreach ($history as $r): ?>
             <tr>
               <td><?php echo $n++; ?></td>
               <td><?php echo $r['score']; ?></td>
@@ -98,7 +92,7 @@ require_once __DIR__ . '/includes/header.php';
               </td>
               <td><?php echo date('d M Y, h:i A', strtotime($r['taken_at'])); ?></td>
             </tr>
-          <?php endwhile; ?>
+          <?php endforeach; ?>
         </tbody>
       </table>
     </div>

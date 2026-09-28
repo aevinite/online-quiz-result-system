@@ -9,7 +9,7 @@ required technologies:
 | **CSS**        | `css/style.css` — design + responsive layout |
 | **JavaScript** | Timer, one-question navigation, answer validation (`js/quiz.js`, `js/main.js`) |
 | **PHP**        | Login/registration, quiz processing, result calculation, admin CRUD |
-| **MySQL**      | Stores `users`, `questions`, `results` (and `admins`) |
+| **Database**   | PostgreSQL on Supabase — stores `users`, `questions`, `results` (and `admins`) |
 
 ---
 
@@ -18,7 +18,7 @@ required technologies:
 - Student **registration & login** (passwords hashed with `password_hash`)
 - **Timed quiz** (5 min) with a JavaScript countdown that auto-submits
 - One-question-at-a-time UI with progress bar
-- **Instant result** — score + percentage + pass/fail, saved to MySQL
+- **Instant result** — score + percentage + pass/fail, saved to the database
 - **Quiz history** for each student
 - **Admin panel** to Add / Edit / Delete questions
 - Responsive design (works on mobile)
@@ -27,32 +27,38 @@ required technologies:
 
 ## Requirements
 
-- **XAMPP** (or WAMP) — provides Apache + PHP + MySQL
+- **PHP 8** with the `pdo_pgsql` extension enabled
+- A **Supabase** project (free plan is enough)
 - A web browser
 
 ---
 
 ## Setup (step by step)
 
-1. **Copy the project** into your web server root:
-   - XAMPP: `C:\xampp\htdocs\quiz-system`
+1. **Create the tables:**
+   - In Supabase open **SQL Editor**, paste `database.sql` and click **Run**.
+   - This creates all tables with sample questions.
 
-2. **Start Apache and MySQL** from the XAMPP Control Panel.
+2. **Point the app at Supabase** (Project → **Connect** → **Session pooler**):
+   - On Vercel, set `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASS`, `DB_NAME` as environment variables.
+   - Locally, create `config/db.local.php` (ignored by git):
+     ```php
+     <?php
+     $DB_LOCAL = ['host' => '...pooler.supabase.com', 'port' => 5432,
+                  'user' => 'postgres.<project-ref>', 'pass' => '...', 'name' => 'postgres'];
+     ```
 
-3. **Create the database:**
-   - Open <http://localhost/phpmyadmin>
-   - Click **Import** → choose `database.sql` → **Go**.
-   - This creates the `quiz_system` database with sample questions.
+3. **Run locally:**
+   - `php -S localhost:8000` inside the project folder.
 
-4. **Create the admin account (one time):**
-   - Visit <http://localhost/quiz-system/setup.php>
+4. **Create the admin account (one time, locally):**
+   - Visit <http://localhost:8000/setup.php>
    - This creates the default admin:
      - **Username:** `admin`
      - **Password:** `admin123`
-   - (You may delete `setup.php` afterwards.)
 
 5. **Open the app:**
-   - <http://localhost/quiz-system/index.php>
+   - <http://localhost:8000/index.php>
 
 ---
 

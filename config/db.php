@@ -1,30 +1,34 @@
 <?php
 /**
- * Database connection (MySQLi).
- * Local (XAMPP/WAMP/MySQL) values are used by default.
- * On Vercel, set DB_HOST, DB_PORT, DB_USER, DB_PASS, DB_NAME and DB_SSL
- * as environment variables to point at a cloud MySQL database.
+ * Database connection (PDO + PostgreSQL on Supabase).
+ * Set DB_HOST, DB_PORT, DB_USER, DB_PASS and DB_NAME as environment
+ * variables (Vercel), or put them in config/db.local.php for local runs.
+ * Use the Supabase *Session pooler* details (Project -> Connect).
  */
 
-$DB_HOST = getenv('DB_HOST') ?: 'localhost';
-$DB_PORT = (int) (getenv('DB_PORT') ?: 3306);
-$DB_USER = getenv('DB_USER') ?: 'root';
-$DB_PASS = getenv('DB_PASS') !== false ? getenv('DB_PASS') : 'root';
-$DB_NAME = getenv('DB_NAME') ?: 'quiz_system';
-$DB_SSL  = getenv('DB_SSL') === 'true';   // cloud databases usually require SSL
-
-$conn  = mysqli_init();
-$flags = 0;
-if ($DB_SSL) {
-    mysqli_ssl_set($conn, null, null, null, null, null);
-    $flags = MYSQLI_CLIENT_SSL | MYSQLI_CLIENT_SSL_DONT_VERIFY_SERVER_CERT;
+if (is_file(__DIR__ . '/db.local.php')) {
+    require_once __DIR__ . '/db.local.php';   // defines $DB_LOCAL = [...]
 }
+$local = isset($DB_LOCAL) ? $DB_LOCAL : [];
+
+$DB_HOST = getenv('DB_HOST') ?: ($local['host'] ?? 'localhost');
+$DB_PORT = (int) (getenv('DB_PORT') ?: ($local['port'] ?? 5432));
+$DB_USER = getenv('DB_USER') ?: ($local['user'] ?? 'postgres');
+$DB_PASS = getenv('DB_PASS') !== false ? getenv('DB_PASS') : ($local['pass'] ?? '');
+$DB_NAME = getenv('DB_NAME') ?: ($local['name'] ?? 'postgres');
 
 try {
-    mysqli_real_connect($conn, $DB_HOST, $DB_USER, $DB_PASS, $DB_NAME, $DB_PORT, null, $flags);
-} catch (mysqli_sql_exception $e) {
+    $conn = new PDO(
+        "pgsql:host=$DB_HOST;port=$DB_PORT;dbname=$DB_NAME;sslmode=require",
+        $DB_USER,
+        $DB_PASS,
+        [
+            PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::ATTR_EMULATE_PREPARES   => true,   // safe with Supabase's pooler
+        ]
+    );
+} catch (PDOException $e) {
     die('Database connection failed: ' . htmlspecialchars($e->getMessage()));
 }
-
-mysqli_set_charset($conn, 'utf8mb4');
 ?>

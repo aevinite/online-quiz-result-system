@@ -15,11 +15,11 @@ $user_id = $_SESSION['user_id'];
 $answers = $_POST['answer'] ?? [];   // [question_id => 'A'/'B'/'C'/'D']
 
 // Load correct answers from DB (never trust the browser).
-$result = mysqli_query($conn, 'SELECT id, correct_option FROM questions');
+$result = $conn->query('SELECT id, correct_option FROM questions');
 $total  = 0;
 $score  = 0;
 
-while ($row = mysqli_fetch_assoc($result)) {
+foreach ($result as $row) {
     $total++;
     $qid = $row['id'];
     if (isset($answers[$qid]) && strtoupper($answers[$qid]) === strtoupper($row['correct_option'])) {
@@ -30,14 +30,11 @@ while ($row = mysqli_fetch_assoc($result)) {
 $percentage = $total > 0 ? round(($score / $total) * 100, 2) : 0;
 
 // Store the attempt.
-$stmt = mysqli_prepare(
-    $conn,
-    'INSERT INTO results (user_id, score, total_questions, percentage) VALUES (?, ?, ?, ?)'
+$stmt = $conn->prepare(
+    'INSERT INTO results (user_id, score, total_questions, percentage) VALUES (?, ?, ?, ?) RETURNING id'
 );
-mysqli_stmt_bind_param($stmt, 'iiid', $user_id, $score, $total, $percentage);
-mysqli_stmt_execute($stmt);
-$result_id = mysqli_insert_id($conn);
-mysqli_stmt_close($stmt);
+$stmt->execute([$user_id, $score, $total, $percentage]);
+$result_id = $stmt->fetchColumn();
 
 // Go to the result page for this attempt.
 header('Location: result.php?id=' . $result_id);

@@ -16,13 +16,17 @@ $password = 'admin123';
 $hash     = password_hash($password, PASSWORD_DEFAULT);
 
 // Insert admin, or update the password if it already exists.
-$stmt = mysqli_prepare(
-    $conn,
-    'INSERT INTO admins (username, password) VALUES (?, ?)
-     ON DUPLICATE KEY UPDATE password = VALUES(password)'
-);
-mysqli_stmt_bind_param($stmt, 'ss', $username, $hash);
-$ok = mysqli_stmt_execute($stmt);
+$error = '';
+try {
+    $stmt = $conn->prepare(
+        'INSERT INTO admins (username, password) VALUES (?, ?)
+         ON CONFLICT (username) DO UPDATE SET password = EXCLUDED.password'
+    );
+    $ok = $stmt->execute([$username, $hash]);
+} catch (PDOException $e) {
+    $ok    = false;
+    $error = $e->getMessage();
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -46,7 +50,7 @@ $ok = mysqli_stmt_execute($stmt);
         <a class="btn btn-secondary" href="index.php">Home</a>
       <?php else: ?>
         <h2>❌ Setup failed</h2>
-        <p><?php echo htmlspecialchars(mysqli_error($conn)); ?></p>
+        <p><?php echo htmlspecialchars($error); ?></p>
       <?php endif; ?>
     </div>
   </div>
