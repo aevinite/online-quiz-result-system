@@ -25,7 +25,7 @@ require_once __DIR__ . '/includes/header.php';
   <div class="card">
     <div class="quiz-header">
       <h2>Quiz Time!</h2>
-      <div class="timer" id="timer">05:00</div>
+      <div class="timer" id="timer">10:00</div>
     </div>
 
     <div class="progress-bar"><span id="progress"></span></div>
@@ -55,8 +55,8 @@ require_once __DIR__ . '/includes/header.php';
   </div>
 
   <script>
-    // Total time for the quiz in seconds (5 minutes).
-    window.QUIZ_TIME = 300;
+    // Total time for the quiz in seconds (10 minutes).
+    window.QUIZ_TIME = 600;
   </script>
   <script src="js/quiz.js"></script>
 <?php endif; ?>
